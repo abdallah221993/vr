@@ -268,7 +268,6 @@ class ARControls {
     handleResize() {
         if (this.isARActive && this.arScene) {
             // Force scene to recalculate dimensions
-            this.arScene.resize();
         }
     }
 }
