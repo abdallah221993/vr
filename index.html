@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>تصور الأثاث بالواقع المعزز</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Noto Sans Arabic', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- A-Frame and AR.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-ar@3.4.5/dist/aframe-ar.min.js"></script>
+    
+    <!-- Google Fonts for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 font-arabic">
+    
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-600">
+        <div class="container mx-auto px-4 py-4 md:py-6">
+            <h1 class="text-2xl md:text-4xl font-bold text-center text-blue-800 mb-2">
+                <i class="fas fa-cube mr-2"></i>
+                تصور الأثاث بالواقع المعزز
+            </h1>
+            <p class="text-center text-gray-600 text-sm md:text-lg">
+                شاهد الأثاث في منزلك قبل الشراء
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        
+        <!-- Instructions -->
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">
+                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                طريقة الاستخدام
+            </h2>
+            <ol class="list-decimal list-inside space-y-2 text-sm md:text-base text-gray-700">
+                <li>اختر قطعة الأثاث التي تريد تجربتها</li>
+                <li>اضغط على "تفعيل الواقع المعزز"</li>
+                <li>امنح الإذن للوصول إلى الكاميرا</li>
+                <li>وجه الكاميرا نحو سطح مستوٍ</li>
+                <li>انقر على الشاشة لوضع الأثاث</li>
+            </ol>
+        </div>
+
+        <!-- Product Upload Section -->
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+            <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">
+                <i class="fas fa-upload text-green-600 mr-2"></i>
+                رفع منتجاتك الخاصة
+            </h3>
+            <div class="space-y-4">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center">
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden" multiple>
+                    <label for="imageUpload" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600">اضغط هنا لرفع صور منتجاتك</p>
+                        <p class="text-sm text-gray-400 mt-1">يمكنك رفع عدة صور (JPG, PNG)</p>
+                    </label>
+                </div>
+                <div id="uploadedImages" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 hidden"></div>
+            </div>
+        </div>
+
+        <!-- Furniture Selection -->
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+            <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">
+                <i class="fas fa-couch text-blue-600 mr-2"></i>
+                اختر قطعة الأثاث
+            </h3>
+            <div id="furnitureGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                <button class="furniture-btn active" data-model="chair" data-name="كرسي">
+                    <i class="fas fa-chair text-xl md:text-2xl mb-2"></i>
+                    <span class="text-sm md:text-base">كرسي مكتب</span>
+                </button>
+                <button class="furniture-btn" data-model="table" data-name="طاولة">
+                    <i class="fas fa-table text-xl md:text-2xl mb-2"></i>
+                    <span class="text-sm md:text-base">طاولة طعام</span>
+                </button>
+                <button class="furniture-btn" data-model="sofa" data-name="أريكة">
+                    <i class="fas fa-couch text-xl md:text-2xl mb-2"></i>
+                    <span class="text-sm md:text-base">أريكة مريحة</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- AR Controls -->
+        <div class="text-center mb-4 md:mb-6">
+            <button id="toggleARButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 md:py-4 px-6 md:px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 w-full md:w-auto">
+                <i class="fas fa-camera mr-2"></i>
+                <span class="text-sm md:text-base">تفعيل الواقع المعزز</span>
+            </button>
+        </div>
+
+        <!-- AR Scene -->
+        <div id="arContainer" class="hidden">
+            <a-scene 
+                id="ar-scene" 
+                embedded 
+                arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+                vr-mode-ui="enabled: false"
+                renderer="antialias: true; alpha: true"
+                loading-screen="enabled: false"
+                style="width: 100%; height: 60vh; min-height: 300px;">
+                
+                <!-- Assets -->
+                <a-assets>
+                    <a-asset-item id="chairModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"></a-asset-item>
+                    <a-asset-item id="tableModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoxAnimated/glTF/BoxAnimated.gltf"></a-asset-item>
+                    <a-asset-item id="sofaModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoomBox/glTF/BoomBox.gltf"></a-asset-item>
+                </a-assets>
+
+                <!-- Lighting -->
+                <a-entity light="type: ambient; color: #ffffff; intensity: 0.4"></a-entity>
+                <a-entity light="type: directional; color: #ffffff; intensity: 0.8" position="2 4 2"></a-entity>
+
+                <!-- Marker -->
+                <a-marker preset="hiro" id="marker" 
+                         markerhandler
+                         cursor="rayOrigin: mouse">
+                    
+                    <!-- 3D Furniture Model -->
+                    <a-entity 
+                        id="furnitureModel"
+                        gltf-model="#chairModel"
+                        position="0 0 0"
+                        scale="0.3 0.3 0.3"
+                        rotation="0 0 0"
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
+                        class="clickable">
+                    </a-entity>
+
+                    <!-- Placement Grid -->
+                    <a-plane 
+                        position="0 -0.1 0" 
+                        rotation="-90 0 0" 
+                        width="2" 
+                        height="2" 
+                        color="#4A90E2" 
+                        opacity="0.3"
+                        material="transparent: true">
+                    </a-plane>
+                </a-marker>
+
+                <!-- Camera -->
+                <a-entity camera look-controls-enabled="false" wasd-controls-enabled="false"></a-entity>
+            </a-scene>
+
+            <!-- AR Controls Overlay -->
+            <div id="arControls" class="ar-controls">
+                <!-- Mobile Controls -->
+                <div class="control-panel-mobile md:hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-white font-semibold text-sm">التحكم</h4>
+                        <button id="closeAR" class="text-white text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-around items-center">
+                        <!-- Scale Controls -->
+                        <div class="flex items-center gap-1">
+                            <button id="scaleDown" class="control-btn-mobile">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="scaleValue" class="text-white text-xs px-1">100%</span>
+                            <button id="scaleUp" class="control-btn-mobile">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <!-- Rotation Controls -->
+                        <div class="flex items-center gap-1">
+                            <button id="rotateLeft" class="control-btn-mobile">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button id="rotateRight" class="control-btn-mobile">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <button id="resetModel" class="control-btn-mobile bg-red-600">
+                            <i class="fas fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Desktop Controls -->
+                <div class="control-panel hidden md:block">
+                    <h4 class="text-white font-semibold mb-3">التحكم في الأثاث</h4>
+                    
+                    <!-- Scale Controls -->
+                    <div class="control-group">
+                        <label class="text-white text-sm">الحجم:</label>
+                        <div class="flex items-center gap-2">
+                            <button id="scaleDownDesktop" class="control-btn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="scaleValueDesktop" class="text-white">100%</span>
+                            <button id="scaleUpDesktop" class="control-btn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rotation Controls -->
+                    <div class="control-group">
+                        <label class="text-white text-sm">الدوران:</label>
+                        <div class="flex items-center gap-2">
+                            <button id="rotateLeftDesktop" class="control-btn">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button id="rotateRightDesktop" class="control-btn">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reset Button -->
+                    <button id="resetModelDesktop" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-full mt-3">
+                        <i class="fas fa-refresh mr-2"></i>
+                        إعادة تعيين
+                    </button>
+
+                    <!-- Close AR Button -->
+                    <button id="closeARDesktop" class="close-ar-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p class="text-white text-lg mt-4">جاري تحميل النموذج...</p>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="errorModal" class="error-modal hidden">
+            <div class="error-content">
+                <h3 class="text-xl font-bold text-red-600 mb-4">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    خطأ
+                </h3>
+                <p id="errorMessage" class="text-gray-700 mb-6"></p>
+                <button id="closeError" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                    موافق
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-lg mt-12">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p class="text-gray-600">
+                © 2025 تصور الأثاث بالواقع المعزز - جميع الحقوق محفوظة
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/mobile-features.js"></script>
+    <script src="js/image-manager.js"></script>
+    <script src="js/model-loader.js"></script>
+    <script src="js/ar-controls.js"></script>
+</body>
+</html>
