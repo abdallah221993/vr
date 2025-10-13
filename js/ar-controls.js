@@ -127,7 +127,7 @@ class ARControls {
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 // Check if camera permission is available
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 stream.getTracks().forEach(track => track.stop());
                 console.log('Camera permissions available');
             }
@@ -156,7 +156,7 @@ class ARControls {
             this.modelLoader.showLoading();
             
             // Request camera permissions
-            await navigator.mediaDevices.getUserMedia({ video: true });
+            await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             
             // Show AR container
             this.arContainer.classList.remove('hidden');
