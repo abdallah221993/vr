@@ -159,7 +159,7 @@ class ARControls {
             await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             
             // Show AR container
-            this.arContainer.classList.remove('hidden');
+            this.arContainer.style.display = 'block';
             this.isARActive = true;
             
             // Update button text
