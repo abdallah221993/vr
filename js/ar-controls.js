@@ -156,10 +156,12 @@ class ARControls {
             this.modelLoader.showLoading();
             
             // Request camera permissions
-            await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            console.log('Camera stream:', stream); // لوج للتأكد
+
             // Show AR container
-            this.arContainer.style.display = 'block';
+            this.arContainer.style.display = 'block'; // استخدم display بدل الكلاس فقط
+            this.arContainer.classList.remove('hidden'); // للتأكد
             this.isARActive = true;
             
             // Update button text
@@ -169,11 +171,16 @@ class ARControls {
             await this.initializeARScene();
             
             this.modelLoader.hideLoading();
-            
+
+            // أضف لوج عند نجاح التشغيل
+            console.log('AR started and container shown.');
         } catch (error) {
             this.modelLoader.hideLoading();
             console.error('AR initialization error:', error);
-            
+
+            // إشعار للمستخدم
+            alert('حدث خطأ في تشغيل الكاميرا: ' + error.message);
+
             if (error.name === 'NotAllowedError') {
                 this.modelLoader.showError(
                     'تم رفض الوصول إلى الكاميرا. يرجى السماح بالوصول إلى الكاميرا في إعدادات المتصفح.'
@@ -191,6 +198,7 @@ class ARControls {
     }
 
     stopAR() {
+        this.arContainer.style.display = 'none';
         this.arContainer.classList.add('hidden');
         this.isARActive = false;
         this.updateToggleButton();
@@ -204,6 +212,7 @@ class ARControls {
         if (video && video.srcObject) {
             const tracks = video.srcObject.getTracks();
             tracks.forEach(track => track.stop());
+            console.log('Camera stream stopped.');
         }
     }
 

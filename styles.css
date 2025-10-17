@@ -31,6 +31,7 @@
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     touch-action: none;
+    background: transparent !important; /* أضف هذا السطر */
 }
 
 @media (max-width: 768px) {
@@ -38,6 +39,7 @@
         height: 50vh;
         min-height: 280px;
         border-radius: 0.25rem;
+        background: transparent !important; /* أضف هذا السطر */
     }
 }
 
