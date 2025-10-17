@@ -3,30 +3,22 @@
   <head>
     <meta charset="utf-8">
     <title>AR.js Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <!-- مكتبة AR.js الصحيحة -->
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
+    <!-- local AR.js file -->
+    <script src="js/aframe-ar.js"></script>
     <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-scene {
-        width: 100vw !important;
-        height: 100vh !important;
-        background: transparent !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 9999;
-      }
+      html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+      a-scene { width: 100vw !important; height: 100vh !important; background: transparent !important; }
     </style>
   </head>
   <body>
     <a-scene
-      id="ar-scene"
       embedded
-      arjs="sourceType: webcam;"
+      arjs="sourceType: webcam; debugUIEnabled: false;"
       vr-mode-ui="enabled: false"
       renderer="antialias: true; alpha: true"
-    >
+      >
       <a-marker preset="hiro">
         <a-box position="0 0.5 0" color="red"></a-box>
       </a-marker>
