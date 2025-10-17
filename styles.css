@@ -32,6 +32,15 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     touch-action: none;
     background: transparent !important; /* أضف هذا السطر */
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure AR container is hidden by default (we toggle with JS) */
+#arContainer {
+    display: none;
+    position: relative;
+    z-index: 9;
 }
 
 @media (max-width: 768px) {
@@ -74,7 +83,7 @@
     position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 1000;
+    z-index: 1001; /* above scene */
 }
 
 .control-panel {

@@ -30,42 +30,54 @@ class ARControls {
     init() {
         this.setupEventListeners();
         this.setupARComponents();
-        this.checkCameraPermissions();
+        // Do not request camera automatically here; wait for user action or explicit permission request
     }
 
     setupEventListeners() {
         // Toggle AR
-        this.toggleARButton.addEventListener('click', () => {
-            this.toggleAR();
-        });
+        if (this.toggleARButton) {
+            this.toggleARButton.addEventListener('click', () => {
+                this.toggleAR();
+            });
+        }
 
         // Close AR
-        this.closeARBtn.addEventListener('click', () => {
-            this.stopAR();
-        });
+        if (this.closeARBtn) {
+            this.closeARBtn.addEventListener('click', () => {
+                this.stopAR();
+            });
+        }
 
         // Scale controls
-        this.scaleUpBtn.addEventListener('click', () => {
-            this.adjustScale(0.1);
-        });
-
-        this.scaleDownBtn.addEventListener('click', () => {
-            this.adjustScale(-0.1);
-        });
+        if (this.scaleUpBtn) {
+            this.scaleUpBtn.addEventListener('click', () => {
+                this.adjustScale(0.1);
+            });
+        }
+        if (this.scaleDownBtn) {
+            this.scaleDownBtn.addEventListener('click', () => {
+                this.adjustScale(-0.1);
+            });
+        }
 
         // Rotation controls
-        this.rotateLeftBtn.addEventListener('click', () => {
-            this.adjustRotation(-45);
-        });
-
-        this.rotateRightBtn.addEventListener('click', () => {
-            this.adjustRotation(45);
-        });
+        if (this.rotateLeftBtn) {
+            this.rotateLeftBtn.addEventListener('click', () => {
+                this.adjustRotation(-45);
+            });
+        }
+        if (this.rotateRightBtn) {
+            this.rotateRightBtn.addEventListener('click', () => {
+                this.adjustRotation(45);
+            });
+        }
 
         // Reset model
-        this.resetModelBtn.addEventListener('click', () => {
-            this.resetModel();
-        });
+        if (this.resetModelBtn) {
+            this.resetModelBtn.addEventListener('click', () => {
+                this.resetModel();
+            });
+        }
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -126,14 +138,15 @@ class ARControls {
     async checkCameraPermissions() {
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                // Check if camera permission is available
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 stream.getTracks().forEach(track => track.stop());
                 console.log('Camera permissions available');
+                return true;
             }
         } catch (error) {
             console.warn('Camera permissions not available:', error);
             this.showCameraError();
+            return false;
         }
     }
 
@@ -154,32 +167,54 @@ class ARControls {
     async startAR() {
         try {
             this.modelLoader.showLoading();
-            
-            // Request camera permissions
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            console.log('Camera stream:', stream); // لوج للتأكد
 
-            // Show AR container
-            this.arContainer.style.display = 'block'; // استخدم display بدل الكلاس فقط
-            this.arContainer.classList.remove('hidden'); // للتأكد
+            // Request camera permission first (prompts user)
+            if (!(await this.checkCameraPermissions())) {
+                this.modelLoader.hideLoading();
+                return;
+            }
+
+            // Show AR container (use display to avoid Tailwind/CSS conflicts)
+            if (this.arContainer) {
+                this.arContainer.style.display = 'block';
+                this.arContainer.classList.remove('hidden');
+            }
             this.isARActive = true;
-            
-            // Update button text
             this.updateToggleButton();
-            
-            // Initialize AR scene
-            await this.initializeARScene();
-            
-            this.modelLoader.hideLoading();
 
-            // أضف لوج عند نجاح التشغيل
+            // Wait for A-Frame scene to be ready
+            await this.initializeARScene();
+
+            // Give AR.js a bit to attach video stream; then check and adjust video element if present
+            setTimeout(() => {
+                try {
+                    const video = this.arScene && this.arScene.querySelector('video');
+                    if (video) {
+                        // Ensure video fills the scene canvas and is visible
+                        video.style.position = 'absolute';
+                        video.style.top = '0';
+                        video.style.left = '0';
+                        video.style.width = '100%';
+                        video.style.height = '100%';
+                        video.style.objectFit = 'cover';
+                        video.style.zIndex = '0';
+                        console.log('AR video element styled and visible.');
+                    } else {
+                        console.warn('Video element not found inside AR scene yet.');
+                    }
+                } catch (err) {
+                    console.error('Error adjusting AR video element:', err);
+                }
+            }, 800);
+
+            this.modelLoader.hideLoading();
             console.log('AR started and container shown.');
         } catch (error) {
             this.modelLoader.hideLoading();
             console.error('AR initialization error:', error);
 
             // إشعار للمستخدم
-            alert('حدث خطأ في تشغيل الكاميرا: ' + error.message);
+            try { alert('حدث خطأ في تشغيل الكاميرا: ' + (error.message || error)); } catch(e){}
 
             if (error.name === 'NotAllowedError') {
                 this.modelLoader.showError(
@@ -198,21 +233,41 @@ class ARControls {
     }
 
     stopAR() {
-        this.arContainer.style.display = 'none';
-        this.arContainer.classList.add('hidden');
+        if (this.arContainer) {
+            this.arContainer.style.display = 'none';
+            this.arContainer.classList.add('hidden');
+        }
         this.isARActive = false;
         this.updateToggleButton();
         
-        // Stop camera stream
+        // Stop camera stream if A-Frame attached it to a video element
         this.stopCameraStream();
     }
 
     stopCameraStream() {
-        const video = this.arScene.querySelector('video');
-        if (video && video.srcObject) {
-            const tracks = video.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
-            console.log('Camera stream stopped.');
+        try {
+            const video = this.arScene && this.arScene.querySelector('video');
+            if (video) {
+                const stream = video.srcObject || (video.mozCaptureStream && video.mozCaptureStream());
+                if (stream && stream.getTracks) {
+                    stream.getTracks().forEach(t => {
+                        try { t.stop(); } catch(e){}
+                    });
+                    console.log('Camera stream stopped.');
+                }
+            }
+
+            // Also attempt to stop any MediaStream on hidden <video> tags
+            const videos = document.querySelectorAll('video');
+            videos.forEach(v => {
+                if (v && v.srcObject && v.srcObject.getTracks) {
+                    v.srcObject.getTracks().forEach(t => {
+                        try { t.stop(); } catch(e){}
+                    });
+                }
+            });
+        } catch (err) {
+            console.warn('Error stopping camera streams:', err);
         }
     }
 
@@ -220,6 +275,12 @@ class ARControls {
         return new Promise((resolve) => {
             const scene = this.arScene;
             
+            if (!scene) {
+                // If scene not found, resolve after a timeout (fail gracefully)
+                setTimeout(resolve, 1500);
+                return;
+            }
+
             if (scene.hasLoaded) {
                 resolve();
                 return;
@@ -235,8 +296,10 @@ class ARControls {
     }
 
     updateToggleButton() {
-        const buttonText = this.toggleARButton.querySelector('span');
-        const buttonIcon = this.toggleARButton.querySelector('i');
+        const buttonText = this.toggleARButton && this.toggleARButton.querySelector('span');
+        const buttonIcon = this.toggleARButton && this.toggleARButton.querySelector('i');
+        
+        if (!this.toggleARButton || !buttonText || !buttonIcon) return;
         
         if (this.isARActive) {
             buttonText.textContent = 'إيقاف الواقع المعزز';
@@ -256,7 +319,7 @@ class ARControls {
         const scaleValue = `${this.currentScale} ${this.currentScale} ${this.currentScale}`;
         
         this.modelLoader.updateModelProperty('scale', scaleValue);
-        this.scaleValue.textContent = `${Math.round(this.currentScale * 100)}%`;
+        if (this.scaleValue) this.scaleValue.textContent = `${Math.round(this.currentScale * 100)}%`;
     }
 
     adjustRotation(delta) {
@@ -271,12 +334,21 @@ class ARControls {
         this.currentRotationY = 0;
         
         this.modelLoader.resetModel();
-        this.scaleValue.textContent = '100%';
+        if (this.scaleValue) this.scaleValue.textContent = '100%';
     }
 
     handleResize() {
         if (this.isARActive && this.arScene) {
-            // Force scene to recalculate dimensions
+            // Force scene to recalculate dimensions if needed
+            // e.g., trigger a resize on renderer if available
+            try {
+                const sceneEl = this.arScene;
+                if (sceneEl && sceneEl.renderer && sceneEl.renderer.domElement) {
+                    sceneEl.renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            } catch (e) {
+                // ignore
+            }
         }
     }
 }
