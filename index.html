@@ -2,11 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>تصور الأثاث بالواقع المعزز</title>
+    <title>تصور الأثاث بالواقع المعزز - بدون علامات</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,231 +24,191 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- A-Frame and AR.js -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Model Viewer for WebXR -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-arabic">
+<body class="font-arabic bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
     
     <!-- Header -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">
-                <i class="fas fa-couch text-blue-600 mr-2"></i>
-                تصور الأثاث بالواقع المعزز
-            </h1>
-            <p class="text-center text-gray-600 mt-2 text-sm md:text-base">
-                اختر أثاثك وشاهده في مكانك قبل الشراء
-            </p>
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-cube text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">تصور الأثاث بالواقع المعزز</h1>
+                        <p class="text-sm opacity-90">تقنية بدون علامات - Markerless AR</p>
+                    </div>
+                </div>
+                <div class="bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">
+                    <i class="fas fa-mobile-alt mr-2"></i>
+                    <span class="text-sm">جرب على هاتفك</span>
+                </div>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-6 md:py-8">
+    <main class="container mx-auto px-4 py-8">
         
-        <!-- Furniture Selection Section -->
-        <section class="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-6">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-th-large text-blue-600 mr-2"></i>
-                اختر قطعة الأثاث
-            </h2>
+        <!-- Info Banner -->
+        <div class="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <i class="fas fa-info-circle text-3xl mt-1"></i>
+                <div>
+                    <h2 class="text-xl font-bold mb-2">جديد! واقع معزز بدون علامات</h2>
+                    <ul class="space-y-1 text-sm">
+                        <li>✅ لا حاجة لطباعة أي علامة الآن</li>
+                        <li>✅ ضع الأثاث مباشرة على أي سطح</li>
+                        <li>✅ تجربة واقع معزز حقيقية على iOS و Android</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Furniture Selection -->
+        <section class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                    <i class="fas fa-shopping-cart text-blue-600"></i>
+                    اختر الأثاث
+                </h2>
+                <div id="selectedCounter" class="hidden bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg">
+                    <span>محدد: </span>
+                    <span id="selectedCount" class="font-bold">0</span>
+                </div>
+            </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" id="furnitureGrid">
-                <!-- Furniture buttons will be dynamically generated -->
+            <div id="furnitureGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Furniture cards will be dynamically generated -->
             </div>
         </section>
 
-        <!-- Selected Items Section -->
-        <section class="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-6" id="selectedItemsSection" style="display: none;">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-shopping-cart text-green-600 mr-2"></i>
-                    القطع المختارة
-                    <span id="selectedCount" class="bg-green-500 text-white text-sm rounded-full px-3 py-1 mr-2">0</span>
-                </h2>
-                <button id="clearSelection" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors duration-200">
-                    <i class="fas fa-trash mr-1"></i>
-                    مسح الكل
+        <!-- AR Activation Button -->
+        <section class="text-center mb-8">
+            <button id="startARButton" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto">
+                <i class="fas fa-camera text-2xl"></i>
+                <span class="text-lg">تشغيل الواقع المعزز</span>
+            </button>
+        </section>
+
+        <!-- AR Viewer Container -->
+        <section id="arViewerContainer" class="hidden bg-white rounded-2xl shadow-2xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800" id="currentModelName">معاينة النموذج</h3>
+                <button id="closeViewer" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-times ml-2"></i>
+                    إغلاق
                 </button>
             </div>
-            
-            <div id="selectedItemsList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                <!-- Selected items will appear here -->
-            </div>
-        </section>
 
-        <!-- AR Toggle Button -->
-        <section class="text-center mb-6">
-            <button id="toggleARButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 text-lg md:text-xl">
-                <i class="fas fa-camera mr-2"></i>
-                <span>تفعيل الواقع المعزز</span>
-            </button>
-            
-            <p class="text-gray-600 mt-4 text-sm md:text-base">
-                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                انقر على الأثاث لاختياره، ثم فعّل الواقع المعزز لوضعه في مكانك
-            </p>
-        </section>
-
-        <!-- AR Container -->
-        <div id="arContainer" class="hidden">
-            <div class="relative">
-                <!-- AR Scene -->
-                <a-scene
-                    id="ar-scene"
-                    embedded
-                    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-                    vr-mode-ui="enabled: false"
-                    renderer="logarithmicDepthBuffer: true; precision: medium;"
-                    gesture-detector
-                >
-                    <!-- Camera -->
-                    <a-camera gps-camera rotation-reader></a-camera>
-
-                    <!-- Marker -->
-                    <a-marker id="markerContainer" preset="hiro" markerhandler emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-                        <!-- Multiple models will be added here dynamically -->
-                    </a-marker>
-                </a-scene>
-
-                <!-- AR Controls -->
-                <div class="ar-controls">
-                    <button id="closeAR" class="close-ar-btn" title="إغلاق الواقع المعزز">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <!-- Model Viewer -->
+            <div class="relative bg-gray-100 rounded-xl overflow-hidden mb-4" style="height: 500px;">
+                <model-viewer
+                    id="arViewer"
+                    style="width: 100%; height: 100%;"
+                    camera-controls
+                    touch-action="pan-y"
+                    auto-rotate
+                    shadow-intensity="1"
+                    ar
+                    ar-modes="webxr scene-viewer quick-look"
+                    ar-scale="auto"
+                    loading="eager">
                     
-                    <div class="control-panel">
-                        <!-- Scale Controls -->
-                        <div class="control-group">
-                            <p class="text-white text-sm mb-2 text-center">الحجم: <span id="scaleValue">100%</span></p>
-                            <div class="flex justify-center gap-2">
-                                <button id="scaleUp" class="control-btn" title="تكبير">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                                <button id="scaleDown" class="control-btn" title="تصغير">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Rotation Controls -->
-                        <div class="control-group">
-                            <p class="text-white text-sm mb-2 text-center">الدوران</p>
-                            <div class="flex justify-center gap-2">
-                                <button id="rotateLeft" class="control-btn" title="دوران لليسار">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                                <button id="rotateRight" class="control-btn" title="دوران لليمين">
-                                    <i class="fas fa-redo"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Reset Button -->
-                        <div class="control-group mb-0">
-                            <button id="resetModel" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg transition-colors duration-200">
-                                <i class="fas fa-sync-alt mr-1"></i>
-                                إعادة تعيين
-                            </button>
-                        </div>
-
-                        <!-- Add/Remove Model Buttons -->
-                        <div class="control-group mb-0">
-                            <button id="addModelBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg mb-2 transition-colors duration-200">
-                                <i class="fas fa-plus-circle mr-1"></i>
-                                إضافة نموذج
-                            </button>
-                            <button id="removeModelBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition-colors duration-200">
-                                <i class="fas fa-minus-circle mr-1"></i>
-                                حذف آخر نموذج
-                            </button>
+                    <!-- Loading indicator -->
+                    <div slot="poster" class="flex items-center justify-center h-full">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                            <p class="text-gray-600">جاري تحميل النموذج...</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Instructions -->
-        <section class="bg-white rounded-2xl shadow-xl p-4 md:p-6">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-question-circle text-purple-600 mr-2"></i>
-                كيفية الاستخدام
-            </h2>
-            
-            <div class="space-y-3">
-                <div class="flex items-start bg-blue-50 p-3 rounded-lg">
-                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">1</div>
-                    <p class="text-gray-700">اختر قطعة أو أكثر من الأثاث من القائمة أعلاه</p>
-                </div>
-                
-                <div class="flex items-start bg-green-50 p-3 rounded-lg">
-                    <div class="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">2</div>
-                    <p class="text-gray-700">اضغط على زر "تفعيل الواقع المعزز"</p>
-                </div>
-                
-                <div class="flex items-start bg-purple-50 p-3 rounded-lg">
-                    <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">3</div>
-                    <p class="text-gray-700">امنح الإذن للكاميرا عندما يُطلب منك ذلك</p>
-                </div>
-                
-                <div class="flex items-start bg-yellow-50 p-3 rounded-lg">
-                    <div class="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">4</div>
-                    <p class="text-gray-700">وجّه الكاميرا نحو علامة Hiro AR أو سطح مستوٍ</p>
-                </div>
-                
-                <div class="flex items-start bg-red-50 p-3 rounded-lg">
-                    <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">5</div>
-                    <p class="text-gray-700">استخدم أزرار التحكم لتعديل الحجم والدوران وإضافة المزيد</p>
-                </div>
+                    
+                    <!-- AR Button -->
+                    <button slot="ar-button" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform">
+                        <i class="fas fa-mobile-alt mr-2"></i>
+                        عرض في الواقع المعزز
+                    </button>
+                </model-viewer>
             </div>
 
-            <!-- Download Marker -->
-            <div class="mt-6 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg">
-                <h3 class="font-bold text-gray-800 mb-2 flex items-center">
-                    <i class="fas fa-download text-blue-600 mr-2"></i>
-                    تحميل علامة AR
-                </h3>
-                <p class="text-sm text-gray-700 mb-3">
-                    قم بتحميل وطباعة علامة Hiro AR لتتمكن من رؤية الأثاث في الواقع المعزز
-                </p>
-                <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" 
-                   download="hiro-marker.png"
-                   class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
-                    <i class="fas fa-file-download mr-2"></i>
-                    تحميل العلامة
-                </a>
+            <!-- Controls -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button id="scaleUp" class="control-btn bg-blue-500 hover:bg-blue-600">
+                    <i class="fas fa-plus"></i>
+                    <span>تكبير</span>
+                </button>
+                <button id="scaleDown" class="control-btn bg-blue-500 hover:bg-blue-600">
+                    <i class="fas fa-minus"></i>
+                    <span>تصغير</span>
+                </button>
+                <button id="rotateRight" class="control-btn bg-green-500 hover:bg-green-600">
+                    <i class="fas fa-redo"></i>
+                    <span>دوران يمين</span>
+                </button>
+                <button id="rotateLeft" class="control-btn bg-green-500 hover:bg-green-600">
+                    <i class="fas fa-undo"></i>
+                    <span>دوران يسار</span>
+                </button>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between">
+                <div class="text-gray-600">
+                    <span>الحجم: </span>
+                    <span id="scaleValue" class="font-bold text-blue-600">100%</span>
+                </div>
+                <button id="resetModel" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-sync-alt ml-2"></i>
+                    إعادة التعيين
+                </button>
             </div>
         </section>
+
+        <!-- Instructions -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-question-circle text-purple-600"></i>
+                كيفية الاستخدام
+            </h3>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="text-center p-4 bg-blue-50 rounded-xl">
+                    <div class="text-4xl mb-3">1️⃣</div>
+                    <h4 class="font-bold mb-2">اختر الأثاث</h4>
+                    <p class="text-sm text-gray-600">انقر على قطعة أثاث من الشبكة أعلاه</p>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-xl">
+                    <div class="text-4xl mb-3">2️⃣</div>
+                    <h4 class="font-bold mb-2">شغل AR</h4>
+                    <p class="text-sm text-gray-600">اضغط على زر "تشغيل الواقع المعزز"</p>
+                </div>
+                <div class="text-center p-4 bg-pink-50 rounded-xl">
+                    <div class="text-4xl mb-3">3️⃣</div>
+                    <h4 class="font-bold mb-2">ضع الأثاث</h4>
+                    <p class="text-sm text-gray-600">وجه الكاميرا واضغط لوضع الأثاث</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p class="text-white text-lg mt-4">جاري التحميل...</p>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">تطبيق تصور الأثاث بالواقع المعزز</p>
+            <p class="text-sm text-gray-400">تقنية WebXR و Model Viewer - بدون علامات</p>
         </div>
-    </div>
-
-    <!-- Error Modal -->
-    <div id="errorModal" class="error-modal hidden">
-        <div class="error-content">
-            <i class="fas fa-exclamation-triangle text-red-600 text-5xl mb-4"></i>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">حدث خطأ</h3>
-            <p id="errorMessage" class="text-gray-600 mb-4">حدث خطأ غير متوقع</p>
-            <button id="closeError" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
-                حسناً
-            </button>
-        </div>
-    </div>
+    </footer>
 
     <!-- Scripts -->
-    <script src="js/model-loader.js"></script>
-    <script src="js/ar-controls.js"></script>
-    <script src="js/image-manager.js"></script>
-    <script src="js/mobile-features.js"></script>
-
+    <script src="model-loader.js"></script>
+    <script src="ar-viewer.js"></script>
 </body>
 </html>

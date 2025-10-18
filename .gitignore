@@ -7,13 +7,11 @@ pids
 *.seed
 *.pid.lock
 
-# Build
+# Compiled binary addons
 build
-dist
 
-# Environment files
+# dotenv environment variables file
 .env
-.dev.vars
 
 # PM2
 .pm2/
