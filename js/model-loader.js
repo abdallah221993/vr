@@ -8,6 +8,7 @@ class ModelLoader {
         this.models = {
             chair: {
                 name: 'كرسي مكتب',
+                assetId: '#chairModel', // استخدم assetId أولاً (يمكنك رفع النموذج محلياً لاحقاً)
                 url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf',
                 scale: { x: 0.3, y: 0.3, z: 0.3 },
                 position: { x: 0, y: 0, z: 0 },
@@ -15,6 +16,7 @@ class ModelLoader {
             },
             table: {
                 name: 'طاولة طعام',
+                assetId: '#tableModel',
                 url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoxAnimated/glTF/BoxAnimated.gltf',
                 scale: { x: 0.5, y: 0.5, z: 0.5 },
                 position: { x: 0, y: 0, z: 0 },
@@ -22,6 +24,7 @@ class ModelLoader {
             },
             sofa: {
                 name: 'أريكة مريحة',
+                assetId: '#sofaModel',
                 url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoomBox/glTF/BoomBox.gltf',
                 scale: { x: 0.4, y: 0.4, z: 0.4 },
                 position: { x: 0, y: 0, z: 0 },
@@ -40,6 +43,19 @@ class ModelLoader {
     init() {
         this.setupFurnitureSelection();
         this.setupErrorHandling();
+
+        // Attach debug listeners to furniture entity (in case it's present early)
+        document.addEventListener('DOMContentLoaded', () => {
+            const furnitureEntity = document.getElementById('furnitureModel');
+            if (furnitureEntity) {
+                furnitureEntity.addEventListener('model-loaded', (e) => {
+                    console.log('Debug: furnitureModel model-loaded', e);
+                });
+                furnitureEntity.addEventListener('model-error', (err) => {
+                    console.error('Debug: furnitureModel model-error', err);
+                });
+            }
+        });
     }
 
     setupFurnitureSelection() {
@@ -62,26 +78,28 @@ class ModelLoader {
 
     setupErrorHandling() {
         const closeErrorBtn = document.getElementById('closeError');
-        closeErrorBtn.addEventListener('click', () => {
-            this.hideError();
-        });
+        if (closeErrorBtn) {
+            closeErrorBtn.addEventListener('click', () => {
+                this.hideError();
+            });
+        }
     }
 
     showLoading() {
-        this.loadingOverlay.classList.remove('hidden');
+        if (this.loadingOverlay) this.loadingOverlay.classList.remove('hidden');
     }
 
     hideLoading() {
-        this.loadingOverlay.classList.add('hidden');
+        if (this.loadingOverlay) this.loadingOverlay.classList.add('hidden');
     }
 
     showError(message) {
-        this.errorMessage.textContent = message;
-        this.errorModal.classList.remove('hidden');
+        if (this.errorMessage) this.errorMessage.textContent = message;
+        if (this.errorModal) this.errorModal.classList.remove('hidden');
     }
 
     hideError() {
-        this.errorModal.classList.add('hidden');
+        if (this.errorModal) this.errorModal.classList.add('hidden');
     }
 
     async switchModel(modelType) {
@@ -113,37 +131,55 @@ class ModelLoader {
                 return;
             }
 
-            // Remove existing model
+            // Hide entity until model loaded
+            furnitureEntity.setAttribute('visible', 'false');
+
+            // Remove existing model attribute (if any)
             furnitureEntity.removeAttribute('gltf-model');
-            
-            // Set new model properties
-            furnitureEntity.setAttribute('gltf-model', `url(${model.url})`);
+
+            // Prefer using assetId (a-asset-item) to avoid CORS; fallback to URL
+            if (model.assetId) {
+                furnitureEntity.setAttribute('gltf-model', model.assetId);
+            } else if (model.url) {
+                furnitureEntity.setAttribute('gltf-model', `url(${model.url})`);
+            }
+
+            // Apply transform attributes immediately
             furnitureEntity.setAttribute('position', `${model.position.x} ${model.position.y} ${model.position.z}`);
             furnitureEntity.setAttribute('scale', `${model.scale.x} ${model.scale.y} ${model.scale.z}`);
             furnitureEntity.setAttribute('rotation', `${model.rotation.x} ${model.rotation.y} ${model.rotation.z}`);
 
             // Wait for model to load
-            const onModelLoaded = () => {
+            const onModelLoaded = (e) => {
                 furnitureEntity.removeEventListener('model-loaded', onModelLoaded);
                 furnitureEntity.removeEventListener('model-error', onModelError);
+                console.log('Model loaded:', model.name, e);
+                // Show model when ready
+                furnitureEntity.setAttribute('visible', 'true');
                 resolve();
             };
 
             const onModelError = (error) => {
                 furnitureEntity.removeEventListener('model-loaded', onModelLoaded);
                 furnitureEntity.removeEventListener('model-error', onModelError);
+                console.error('Model error:', model.name, error);
+                // Show user-friendly error
+                this.showError('فشل في تحميل ملف النموذج (راجع Console لمزيد من التفاصيل).');
                 reject(error);
             };
 
             furnitureEntity.addEventListener('model-loaded', onModelLoaded);
             furnitureEntity.addEventListener('model-error', onModelError);
 
-            // Fallback timeout
-            setTimeout(() => {
+            // Fallback timeout: if model doesn't emit events, resolve after timeout but keep entity visible = false
+            const fallback = setTimeout(() => {
                 furnitureEntity.removeEventListener('model-loaded', onModelLoaded);
                 furnitureEntity.removeEventListener('model-error', onModelError);
-                resolve(); // Resolve anyway to prevent hanging
-            }, 10000);
+                console.warn('Model load timeout, showing entity for debugging');
+                // Optionally show it (commented out by default)
+                // furnitureEntity.setAttribute('visible', 'true');
+                resolve();
+            }, 15000);
         });
     }
 

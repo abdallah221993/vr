@@ -61,8 +61,8 @@
                 <li>اختر قطعة الأثاث التي تريد تجربتها</li>
                 <li>اضغط على "تفعيل الواقع المعزز"</li>
                 <li>امنح الإذن للوصول إلى الكاميرا</li>
-                <li>وجه الكاميرا نحو سطح مستوٍ</li>
-                <li>انقر على الشاشة لوضع الأثاث</li>
+                <li>وجه الكاميرا نحو ماركر Hiro المطبوع أو المعروض على شاشة أخرى</li>
+                <li>انقر على الشاشة لوضع الأثاث أو غيّر الحجم/الدوران من أدوات التحكم</li>
             </ol>
         </div>
 
@@ -128,7 +128,7 @@
                 
                 <!-- Assets -->
                 <a-assets>
-                    <!-- Note: If these external model URLs cause CORS issues, upload models into the repo (assets/) and reference locally -->
+                    <!-- الأفضل: ارفع هذه النماذج داخل الريبو تحت assets/models/ وغيّر المسارات هنا إلى محلية -->
                     <a-asset-item id="chairModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf"></a-asset-item>
                     <a-asset-item id="tableModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoxAnimated/glTF/BoxAnimated.gltf"></a-asset-item>
                     <a-asset-item id="sofaModel" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoomBox/glTF/BoomBox.gltf"></a-asset-item>
@@ -139,18 +139,16 @@
                 <a-entity light="type: directional; color: #ffffff; intensity: 0.8" position="2 4 2"></a-entity>
 
                 <!-- Marker -->
-                <a-marker preset="hiro" id="marker" 
-                         markerhandler
-                         cursor="rayOrigin: mouse">
+                <a-marker preset="hiro" id="marker" markerhandler cursor="rayOrigin: mouse">
                     
-                    <!-- 3D Furniture Model -->
+                    <!-- 3D Furniture Model (مخفي افتراضياً ويُعرض عند تحميله وبعد اكتشاف الماركر) -->
                     <a-entity 
                         id="furnitureModel"
+                        visible="false"
                         gltf-model="#chairModel"
                         position="0 0 0"
                         scale="0.3 0.3 0.3"
                         rotation="0 0 0"
-                        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
                         class="clickable">
                     </a-entity>
 
