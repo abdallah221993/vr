@@ -114,7 +114,7 @@ class ARControls {
 
       // Wait for video element using robust wait (polling + MutationObserver)
       try {
-        const video = await this.waitForARVideo(10000); // timeout 10s
+        const video = await this.waitForARVideo(20000); // timeout 20s
         // style video to fill scene
         video.style.position = 'absolute';
         video.style.top = '0';
