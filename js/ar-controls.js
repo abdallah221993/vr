@@ -1,6 +1,5 @@
 /**
- * AR Controls Module (updated)
- * Ensures proper ordering and checks for video element after AR initialization
+ * AR Controls Module (updated with robust video wait + debug logs)
  */
 
 class ARControls {
@@ -57,6 +56,8 @@ class ARControls {
         }
       });
       // touch-controls kept as before (if present)
+    } else {
+      console.warn('AFRAME is not defined yet when registering components.');
     }
   }
 
@@ -84,6 +85,9 @@ class ARControls {
     try {
       this.modelLoader.showLoading();
 
+      // debug: log which scripts are loaded (helps detect duplicate/incorrect aframe-ar)
+      this.logARRelatedScripts();
+
       if (!(await this.checkCameraPermissions())) {
         this.modelLoader.hideLoading();
         return;
@@ -97,25 +101,24 @@ class ARControls {
       this.isARActive = true;
       this.updateToggleButton();
 
-      // wait for scene
+      // wait for scene loaded
       await this.initializeARScene();
 
-      // Give AR.js time to attach stream & create <video>
-      setTimeout(() => {
-        const video = this.arScene && this.arScene.querySelector('video');
-        if (video) {
-          video.style.position = 'absolute';
-          video.style.top = '0';
-          video.style.left = '0';
-          video.style.width = '100%';
-          video.style.height = '100%';
-          video.style.objectFit = 'cover';
-          video.style.zIndex = '0';
-          console.log('AR video element styled and visible.');
-        } else {
-          console.warn('Video element not found inside AR scene yet.');
-        }
-      }, 900);
+      // Wait for video element using robust wait (polling + MutationObserver)
+      try {
+        const video = await this.waitForARVideo(5000); // timeout 5s
+        // style video to fill scene
+        video.style.position = 'absolute';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.zIndex = '0';
+        console.log('AR video element styled and visible.');
+      } catch (err) {
+        console.warn('Video element not found inside AR scene after wait:', err);
+      }
 
       this.modelLoader.hideLoading();
       console.log('AR started and container shown.');
@@ -132,6 +135,67 @@ class ARControls {
         this.modelLoader.showError('فشل في تفعيل الواقع المعزز.');
       }
     }
+  }
+
+  // Wait for the <video> element that AR.js should create
+  waitForARVideo(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      if (!this.arScene) return reject(new Error('AR scene not found'));
+
+      // immediate check
+      const checkVideo = () => {
+        const v = this.arScene.querySelector('video');
+        if (v) return v;
+        // sometimes video is created on scene._canvas or scene.querySelector('canvas').parentNode - do a broad search
+        const anyVideo = document.querySelector('video');
+        return anyVideo;
+      };
+
+      const found = checkVideo();
+      if (found) return resolve(found);
+
+      let resolved = false;
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (node.nodeName && node.nodeName.toLowerCase() === 'video') {
+              resolved = true;
+              observer.disconnect();
+              resolve(node);
+              return;
+            }
+            // also search subtree
+            if (node.querySelector && node.querySelector('video')) {
+              resolved = true;
+              observer.disconnect();
+              resolve(node.querySelector('video'));
+              return;
+            }
+          }
+        }
+      });
+
+      observer.observe(this.arScene, { childList: true, subtree: true });
+
+      // fallback polling
+      const interval = 300;
+      let elapsed = 0;
+      const poll = setInterval(() => {
+        elapsed += interval;
+        const v = checkVideo();
+        if (v) {
+          resolved = true;
+          clearInterval(poll);
+          observer.disconnect();
+          return resolve(v);
+        }
+        if (elapsed >= timeout) {
+          clearInterval(poll);
+          observer.disconnect();
+          if (!resolved) return reject(new Error('timeout waiting for video'));
+        }
+      }, interval);
+    });
   }
 
   stopAR() {
@@ -194,6 +258,13 @@ class ARControls {
     if (this.isARActive && this.arScene) {
       try { if (this.arScene.renderer && this.arScene.renderer.setSize) this.arScene.renderer.setSize(window.innerWidth, window.innerHeight); } catch(e){}
     }
+  }
+
+  // Debug helper: log loaded script URLs related to aframe/ar
+  logARRelatedScripts() {
+    const scripts = Array.from(document.querySelectorAll('script[src]')).map(s => s.src);
+    console.log('Loaded scripts count:', scripts.length);
+    scripts.filter(u => /aframe|ar\.js|arjs|three/i.test(u)).forEach(u => console.log('AR-related script:', u));
   }
 }
 
