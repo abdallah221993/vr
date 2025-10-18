@@ -9,12 +9,12 @@ class ModelLoader {
     this.models = {
       chair: {
         id: 'chair',
-        name: 'كرسي خشبي',
+        name: 'كرسي 3D محلي',
         icon: 'fa-chair',
         color: '#3b82f6',
-        url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Chair/glTF-Binary/Chair.glb',
+        url: './assets/products/chair.glb', // ← المسار المحلي
         scale: 0.6,
-        description: 'كرسي خشبي بتصميم بسيط وأنيق'
+        description: 'كرسي ثلاثي الأبعاد من مجلد المشروع'
       },
       table: {
         id: 'table',
