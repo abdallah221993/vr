@@ -48,17 +48,25 @@ class ARControls {
   }
 
   setupARComponents() {
-    if (typeof AFRAME !== 'undefined') {
+    const register = () => {
+      if (typeof AFRAME === 'undefined') {
+        console.warn('AFRAME not ready yet, retrying component registration...');
+        setTimeout(register, 200);
+        return;
+      }
+      // Register components safely
       AFRAME.registerComponent('markerhandler', {
         init: function () {
           this.el.addEventListener('markerFound', () => { console.log('Marker detected'); this.el.setAttribute('visible', true); });
           this.el.addEventListener('markerLost', () => { console.log('Marker lost'); this.el.setAttribute('visible', false); });
         }
       });
-      // touch-controls kept as before (if present)
-    } else {
-      console.warn('AFRAME is not defined yet when registering components.');
-    }
+
+      // (إذا لديك أي components إضافية ضفها هنا)
+      console.log('A-Frame components registered.');
+    };
+
+    register();
   }
 
   async checkCameraPermissions() {
@@ -106,7 +114,7 @@ class ARControls {
 
       // Wait for video element using robust wait (polling + MutationObserver)
       try {
-        const video = await this.waitForARVideo(5000); // timeout 5s
+        const video = await this.waitForARVideo(10000); // timeout 10s
         // style video to fill scene
         video.style.position = 'absolute';
         video.style.top = '0';
