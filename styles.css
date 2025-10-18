@@ -1,6 +1,6 @@
-/* Custom styles for the AR furniture app */
+/* Custom styles for AR Furniture Visualization App */
 
-/* RTL Support */
+/* ===== RTL Support ===== */
 [dir="rtl"] {
     text-align: right;
 }
@@ -10,19 +10,24 @@
     margin-left: 0.5rem;
 }
 
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-    body {
-        font-size: 14px;
-    }
-    
-    .container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
+[dir="rtl"] .ml-3 {
+    margin-left: 0;
+    margin-right: 0.75rem;
 }
 
-/* AR Scene Styles */
+/* ===== Global Styles ===== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Sans Arabic', 'Arial', sans-serif;
+    overflow-x: hidden;
+}
+
+/* ===== AR Scene Styles ===== */
 #ar-scene {
     width: 100%;
     height: 60vh;
@@ -31,96 +36,157 @@
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     touch-action: none;
-    background: transparent !important; /* أضف هذا السطر */
+    background: transparent !important;
     position: relative;
     z-index: 10;
 }
 
-/* Ensure AR container is hidden by default (we toggle with JS) */
+/* Ensure AR container is hidden by default */
 #arContainer {
     display: none;
     position: relative;
     z-index: 9;
 }
 
-@media (max-width: 768px) {
-    #ar-scene {
-        height: 50vh;
-        min-height: 280px;
-        border-radius: 0.25rem;
-        background: transparent !important; /* أضف هذا السطر */
-    }
+#arContainer.hidden {
+    display: none !important;
 }
 
-/* Furniture Selection Buttons */
+/* ===== Furniture Selection Buttons ===== */
 .furniture-btn {
-    @apply bg-gray-100 hover:bg-blue-50 border-2 border-gray-300 hover:border-blue-400 rounded-lg p-4 md:p-6 flex flex-col items-center justify-center transition-all duration-300 text-gray-700 hover:text-blue-600;
-    min-height: 80px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: 2px solid #d1d5db;
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 100px;
     touch-action: manipulation;
-}
-
-.furniture-btn.active {
-    @apply bg-blue-100 border-blue-500 text-blue-700;
+    color: #374151;
+    font-weight: 600;
 }
 
 .furniture-btn:hover {
+    background: linear-gradient(135deg, #e0e7ff 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-@media (max-width: 768px) {
-    .furniture-btn {
-        min-height: 70px;
-        padding: 0.75rem;
-    }
-    
-    .furniture-btn:active {
-        transform: scale(0.95);
-    }
+.furniture-btn.active {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    border-width: 3px;
+    color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* AR Controls Overlay */
+.furniture-btn i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== AR Controls Overlay ===== */
 .ar-controls {
     position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 1001; /* above scene */
+    z-index: 1001;
+    max-width: 250px;
 }
 
 .control-panel {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 0.75rem;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    border-radius: 1rem;
     padding: 1rem;
-    min-width: 200px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .control-group {
     margin-bottom: 1rem;
 }
 
+.control-group:last-child {
+    margin-bottom: 0;
+}
+
 .control-btn {
-    @apply bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.control-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
 }
 
 .close-ar-btn {
     position: absolute;
     top: 20px;
     left: 20px;
-    @apply bg-red-600 hover:bg-red-700 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl transition-colors duration-200;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+    z-index: 1002;
 }
 
-/* Loading Overlay */
+.close-ar-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: scale(1.1);
+}
+
+.close-ar-btn:active {
+    transform: scale(0.95);
+}
+
+/* ===== Loading Overlay ===== */
 .loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    backdrop-filter: blur(10px);
+}
+
+.loading-overlay.hidden {
+    display: none;
 }
 
 .loading-content {
@@ -129,9 +195,9 @@
 
 /* Spinner Animation */
 .spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(255, 255, 255, 0.3);
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
     border-top: 5px solid #ffffff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -143,71 +209,105 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Error Modal */
+/* ===== Error Modal ===== */
 .error-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.error-modal.hidden {
+    display: none;
 }
 
 .error-content {
     background: white;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     padding: 2rem;
     max-width: 400px;
     margin: 1rem;
     text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile Responsive */
+/* ===== Mobile Responsive ===== */
 @media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
     #ar-scene {
-        height: 60vh;
+        height: 50vh;
+        min-height: 280px;
+        border-radius: 0.5rem;
     }
     
     .ar-controls {
         top: 10px;
         right: 10px;
         left: 10px;
+        max-width: none;
     }
     
     .control-panel {
         padding: 0.75rem;
-        min-width: auto;
         width: 100%;
     }
     
     .close-ar-btn {
         top: 10px;
         left: 10px;
-        width: 40px;
-        height: 40px;
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.25rem;
     }
     
     .furniture-btn {
-        padding: 1rem;
+        padding: 0.75rem;
+        min-height: 80px;
+    }
+    
+    .furniture-btn i {
+        font-size: 2rem;
+    }
+    
+    .control-btn {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
     }
 }
 
-/* Touch Interactions */
+/* ===== Touch Interactions ===== */
 @media (hover: none) and (pointer: coarse) {
     .furniture-btn:hover {
         transform: none;
     }
     
     .furniture-btn:active {
-        transform: scale(0.95);
+        transform: scale(0.97);
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    }
+    
+    .control-btn:hover {
+        transform: none;
     }
 }
 
-/* High DPI Displays */
+/* ===== High DPI Displays ===== */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
     #ar-scene {
         image-rendering: -webkit-optimize-contrast;
@@ -215,44 +315,93 @@
     }
 }
 
-/* Dark Mode Support */
+/* ===== Dark Mode Support ===== */
 @media (prefers-color-scheme: dark) {
     .furniture-btn {
-        @apply bg-gray-800 hover:bg-gray-700 border-gray-600 hover:border-blue-400 text-gray-300 hover:text-blue-400;
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+    
+    .furniture-btn:hover {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        border-color: #3b82f6;
+        color: #93c5fd;
     }
     
     .furniture-btn.active {
-        @apply bg-blue-900 border-blue-400 text-blue-300;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        border-color: #3b82f6;
+        color: #dbeafe;
     }
 }
 
-/* Accessibility */
+/* ===== Accessibility ===== */
 .furniture-btn:focus,
 .control-btn:focus,
 button:focus {
-    outline: 2px solid #3B82F6;
-    outline-offset: 2px;
+    outline: 3px solid #3b82f6;
+    outline-offset: 3px;
 }
 
-/* Reduce Motion */
+/* Focus visible for keyboard navigation */
+.furniture-btn:focus-visible,
+.control-btn:focus-visible,
+button:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 3px;
+}
+
+/* Remove focus outline for mouse users */
+.furniture-btn:focus:not(:focus-visible),
+.control-btn:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ===== Reduce Motion ===== */
 @media (prefers-reduced-motion: reduce) {
     .furniture-btn,
     .control-btn,
-    #toggleARButton {
-        transition: none;
-    }
-    
+    #toggleARButton,
     .spinner {
+        transition: none;
         animation: none;
     }
 }
 
-/* Print Styles */
+/* ===== Print Styles ===== */
 @media print {
     #arContainer,
     .ar-controls,
     .loading-overlay,
-    .error-modal {
+    .error-modal,
+    #toggleARButton {
         display: none !important;
+    }
+}
+
+/* ===== Utility Classes ===== */
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+/* ===== Selected Items Section ===== */
+#selectedItemsSection {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
