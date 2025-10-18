@@ -1,5 +1,5 @@
 /**
- * AR Controls Module (marker handler updated + full AR lifecycle)
+ * AR Controls Module (robust binding for toggle button + full AR lifecycle)
  */
 
 class ARControls {
@@ -8,6 +8,7 @@ class ARControls {
     this.currentScale = 1.0;
     this.currentRotationY = 0;
 
+    // Elements (may be null if DOM not ready yet)
     this.toggleARButton = document.getElementById('toggleARButton');
     this.arContainer = document.getElementById('arContainer');
     this.arScene = document.getElementById('ar-scene');
@@ -25,18 +26,21 @@ class ARControls {
   }
 
   init() {
+    // Ensure we bind event listeners even if DOM elements are added later
     this.setupEventListeners();
     this.setupARComponents();
-    // Do not request camera until user clicks toggle
+
+    // Robustly ensure toggle button bound (in case it was not present when constructor ran)
+    this.ensureToggleBinding();
   }
 
   setupEventListeners() {
-    if (this.toggleARButton) {
-      this.toggleARButton.addEventListener('click', () => this.toggleAR());
-    }
+    // Close button
     if (this.closeARBtn) {
       this.closeARBtn.addEventListener('click', () => this.stopAR());
     }
+
+    // Scale / rotate / reset (buttons may be null on some viewports)
     if (this.scaleUpBtn) this.scaleUpBtn.addEventListener('click', () => this.adjustScale(0.1));
     if (this.scaleDownBtn) this.scaleDownBtn.addEventListener('click', () => this.adjustScale(-0.1));
     if (this.rotateLeftBtn) this.rotateLeftBtn.addEventListener('click', () => this.adjustRotation(-45));
@@ -47,6 +51,37 @@ class ARControls {
     window.addEventListener('orientationchange', () => setTimeout(() => this.handleResize(), 500));
   }
 
+  // Try to bind the toggle button now, and keep retrying for a short while if not found.
+  ensureToggleBinding(retries = 10, delay = 200) {
+    const tryBind = () => {
+      this.toggleARButton = document.getElementById('toggleARButton');
+      if (this.toggleARButton) {
+        // remove any previous handler we might have added in an earlier attempt
+        try { this.toggleARButton.removeEventListener('click', this._toggleHandler); } catch(e){}
+        this._toggleHandler = () => this.toggleAR();
+        this.toggleARButton.addEventListener('click', this._toggleHandler);
+        this.toggleARButton.style.cursor = 'pointer';
+        console.log('ARControls: toggleARButton bound.');
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryBind() && retries > 0) {
+      const intervalId = setInterval(() => {
+        if (tryBind()) {
+          clearInterval(intervalId);
+        } else {
+          retries -= 1;
+          if (retries <= 0) {
+            clearInterval(intervalId);
+            console.warn('ARControls: toggleARButton not found after retries.');
+          }
+        }
+      }, delay);
+    }
+  }
+
   setupARComponents() {
     const register = () => {
       if (typeof AFRAME === 'undefined') {
@@ -54,31 +89,27 @@ class ARControls {
         setTimeout(register, 200);
         return;
       }
-
-      // markerhandler: show/hide furnitureModel inside marker on found/lost
-      AFRAME.registerComponent('markerhandler', {
-        init: function () {
-          const markerEl = this.el;
-          markerEl.addEventListener('markerFound', () => {
-            console.log('Marker detected — showing furniture');
-            const furniture = markerEl.querySelector('#furnitureModel');
-            if (furniture) {
-              // Ensure model visible only if loaded
-              furniture.setAttribute('visible', 'true');
-            }
-          });
-
-          markerEl.addEventListener('markerLost', () => {
-            console.log('Marker lost — hiding furniture');
-            const furniture = markerEl.querySelector('#furnitureModel');
-            if (furniture) {
-              furniture.setAttribute('visible', 'false');
-            }
-          });
-        }
-      });
-
-      console.log('A-Frame components registered.');
+      // Register markerhandler component if not registered yet
+      if (!AFRAME.components.markerhandler) {
+        AFRAME.registerComponent('markerhandler', {
+          init: function () {
+            const markerEl = this.el;
+            markerEl.addEventListener('markerFound', () => {
+              console.log('Marker detected — showing furniture');
+              const furniture = markerEl.querySelector('#furnitureModel');
+              if (furniture) furniture.setAttribute('visible', 'true');
+            });
+            markerEl.addEventListener('markerLost', () => {
+              console.log('Marker lost — hiding furniture');
+              const furniture = markerEl.querySelector('#furnitureModel');
+              if (furniture) furniture.setAttribute('visible', 'false');
+            });
+          }
+        });
+        console.log('ARControls: markerhandler registered.');
+      } else {
+        console.log('ARControls: markerhandler already registered.');
+      }
     };
 
     register();
@@ -92,6 +123,7 @@ class ARControls {
         console.log('Camera permissions available');
         return true;
       }
+      return false;
     } catch (e) {
       console.warn('Camera permissions not available:', e);
       this.modelLoader.showError('لا يمكن الوصول إلى الكاميرا. يرجى التأكد من الأذونات.');
@@ -107,8 +139,6 @@ class ARControls {
   async startAR() {
     try {
       this.modelLoader.showLoading();
-
-      // debug: log which scripts are loaded (helps detect duplicate/incorrect aframe-ar)
       this.logARRelatedScripts();
 
       if (!(await this.checkCameraPermissions())) {
@@ -116,7 +146,6 @@ class ARControls {
         return;
       }
 
-      // show container reliably
       if (this.arContainer) {
         this.arContainer.style.display = 'block';
         this.arContainer.classList.remove('hidden');
@@ -124,21 +153,20 @@ class ARControls {
       this.isARActive = true;
       this.updateToggleButton();
 
-      // wait for scene loaded
       await this.initializeARScene();
 
-      // Wait for video element using robust wait (polling + MutationObserver)
       try {
-        const video = await this.waitForARVideo(20000); // timeout 20s
-        // style video to fill scene
-        video.style.position = 'absolute';
-        video.style.top = '0';
-        video.style.left = '0';
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.style.zIndex = '0';
-        console.log('AR video element styled and visible.');
+        const video = await this.waitForARVideo(20000);
+        if (video) {
+          video.style.position = 'absolute';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.style.zIndex = '0';
+          console.log('AR video element styled and visible.');
+        }
       } catch (err) {
         console.warn('Video element not found inside AR scene after wait:', err);
       }
@@ -148,25 +176,20 @@ class ARControls {
     } catch (error) {
       this.modelLoader.hideLoading();
       console.error('AR initialization error:', error);
-      try { alert('حدث خطأ في تشغيل الكاميرا: ' + (error.message || error)); } catch(e){}
       this.modelLoader.showError('فشل في تفعيل الواقع المعزز.');
     }
   }
 
-  // Wait for the <video> element that AR.js should create
+  // ... (waitForARVideo, initializeARScene, stopAR, stopCameraStream, updateToggleButton, adjustScale, adjustRotation, resetModel, handleResize, logARRelatedScripts)
   waitForARVideo(timeout = 5000) {
     return new Promise((resolve, reject) => {
       if (!this.arScene) return reject(new Error('AR scene not found'));
-
-      // immediate check
       const checkVideo = () => {
         const v = this.arScene.querySelector('video');
         if (v) return v;
-        // sometimes video is created on scene._canvas or scene.querySelector('canvas').parentNode - do a broad search
         const anyVideo = document.querySelector('video');
         return anyVideo;
       };
-
       const found = checkVideo();
       if (found) return resolve(found);
 
@@ -180,7 +203,6 @@ class ARControls {
               resolve(node);
               return;
             }
-            // also search subtree
             if (node.querySelector && node.querySelector('video')) {
               resolved = true;
               observer.disconnect();
@@ -193,7 +215,6 @@ class ARControls {
 
       observer.observe(this.arScene, { childList: true, subtree: true });
 
-      // fallback polling
       const interval = 300;
       let elapsed = 0;
       const poll = setInterval(() => {
@@ -214,6 +235,16 @@ class ARControls {
     });
   }
 
+  async initializeARScene() {
+    return new Promise((resolve) => {
+      const scene = this.arScene;
+      if (!scene) return setTimeout(resolve, 1500);
+      if (scene.hasLoaded) return resolve();
+      scene.addEventListener('loaded', () => resolve());
+      setTimeout(resolve, 3000);
+    });
+  }
+
   stopAR() {
     if (this.arContainer) {
       this.arContainer.style.display = 'none';
@@ -231,7 +262,6 @@ class ARControls {
         video.srcObject.getTracks().forEach(t => { try { t.stop(); } catch(e){} });
         console.log('Camera stream stopped.');
       }
-      // also attempt to stop any other video srcObjects
       document.querySelectorAll('video').forEach(v => {
         if (v && v.srcObject && v.srcObject.getTracks) {
           v.srcObject.getTracks().forEach(t => { try { t.stop(); } catch(e){} });
@@ -240,17 +270,6 @@ class ARControls {
     } catch (err) {
       console.warn('Error stopping camera streams:', err);
     }
-  }
-
-  async initializeARScene() {
-    return new Promise((resolve) => {
-      const scene = this.arScene;
-      if (!scene) return setTimeout(resolve, 1500);
-
-      if (scene.hasLoaded) return resolve();
-      scene.addEventListener('loaded', () => resolve());
-      setTimeout(resolve, 3000);
-    });
   }
 
   updateToggleButton() {
@@ -276,7 +295,6 @@ class ARControls {
     }
   }
 
-  // Debug helper: log loaded script URLs related to aframe/ar
   logARRelatedScripts() {
     const scripts = Array.from(document.querySelectorAll('script[src]')).map(s => s.src);
     console.log('Loaded scripts count:', scripts.length);
